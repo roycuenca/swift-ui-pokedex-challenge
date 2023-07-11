@@ -8,14 +8,35 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @StateObject var viewModel = PokemonViewModel()
+    @State private var pokemonToSearch = ""
+        
+    private let numberOfColums = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        NavigationStack {
+            ScrollView{
+                LazyVGrid(columns: numberOfColums) {
+                    ForEach(viewModel.filteredValues, id: \.self) { pokemon in
+                        NavigationLink(destination: PokemonDetailView(pokemon: pokemon)) {
+                            PokemonCellView( pokemon: pokemon, viewModel: viewModel)
+                        }
+                    }
+                }.padding(20)
+            }
+            .onChange(of: pokemonToSearch, perform: {newValue in
+                withAnimation{
+                    viewModel.filterPokemon(name: newValue)
+                }
+            })
+            .searchable(text: $pokemonToSearch, prompt: "Search Pokemon")
+            .navigationBarTitle("Pokedex", displayMode: .inline)
         }
-        .padding()
     }
 }
 

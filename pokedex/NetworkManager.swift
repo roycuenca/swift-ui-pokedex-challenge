@@ -16,6 +16,7 @@ enum APPError: Error {
 }
 
 class NetworkManager {
+    static let shared = NetworkManager()
     static let baseURL = "https://pokedex-bb36f.firebaseio.com/pokemon.json"
     
     init() {}
@@ -29,30 +30,32 @@ class NetworkManager {
         let task = URLSession.shared.dataTask(with: url) {data, _, error in
                 
                 guard let data = data?.parseData(removeString: "null,") else {
-                    completed(.failure(.invalidURL))
+                    completed(.failure(.decodingError))
                     return
                 }
+            
             do {
                 let decoder = JSONDecoder()
                 let response = try decoder.decode([PokemonModel].self, from: data)
+                print("pokemons here \(response.count)")
                 completed(.success(response))
             } catch {
                 print ("Debug: error \(error.localizedDescription)")
                 completed(.failure(.decodingError))
             }
                 
-                
+            
         }
-                      
+        task.resume()
       
     }
 }
                       
-                      extension Data {
-                func parseData(removeString word: String) -> Data? {
-                    let dataAsString = String(data: self, encoding: .utf8)
-                     let parseDataString = dataAsString?.replacingOccurrences(of: word, with: "")
-                    guard let data = parseDataString?.data(using: .utf8) else { return nil}
-                    return data
-                }
-            }
+extension Data {
+    func parseData(removeString word: String) -> Data? {
+        let dataAsString = String(data: self, encoding: .utf8)
+        let parseDataString = dataAsString?.replacingOccurrences(of: word, with: "")
+        guard let data = parseDataString?.data(using: .utf8) else { return nil}
+        return data
+    }
+}
